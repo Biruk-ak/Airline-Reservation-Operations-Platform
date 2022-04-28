@@ -15,6 +15,7 @@ class SearchBaggageItemRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
             'priority_min' => ['nullable', 'integer', 'min:0', 'max:10'],
             'q' => ['nullable', 'string', 'max:255'],
+            'mishandled' => ['nullable', 'boolean'],
             'effective_on' => ['nullable', 'date'],
             'created_from' => ['nullable', 'date'],
             'created_to' => ['nullable', 'date'],

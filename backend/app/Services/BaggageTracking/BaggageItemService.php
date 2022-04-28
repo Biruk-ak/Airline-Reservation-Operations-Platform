@@ -25,6 +25,12 @@ class BaggageItemService
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
+        if (!empty($filters['mishandled'])) {
+            $query->where(function ($q) {
+                $q->where('status', 'pending_review')
+                  ->orWhere('metadata->mishandled', true);
+            });
+        }
         if (!empty($filters['station_code'])) {
             $query->forStation($filters['station_code']);
         }
