@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Http\Controllers\Api\AirportOperations;
+
+use App\Http\Controllers\Controller;
+use App\Models\AirportOperations\Airport;
+use App\Services\AirportOperations\AirportService;
+use App\Http\Requests\AirportOperations\StoreAirportRequest;
+use App\Http\Requests\AirportOperations\UpdateAirportRequest;
+use App\Http\Requests\AirportOperations\SearchAirportRequest;
+use App\Http\Requests\AirportOperations\BulkAirportRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class AirportController extends Controller
+{
+    public function __construct(private AirportService $service)
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('airline.scope');
+    }
+
+    public function index(SearchAirportRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $filters['airline_id'] = $request->attributes->get('airline_id');
+        $paginator = $this->service->search($filters, (int) $request->get('per_page', 25));
+
+        return response()->json([
+            'data' => collect($paginator->items())->map->toOperationalSummary(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function store(StoreAirportRequest $request): JsonResponse
+    {
+        $payload = $request->validated();
+        $payload['airline_id'] = $request->attributes->get('airline_id');
+        $payload['created_by'] = $request->user()->id;
+        $payload['updated_by'] = $request->user()->id;
+
+        $entity = $this->service->create($payload);
+
+        return response()->json([
+            'message' => 'Airport created successfully',
+            'data' => $entity->toOperationalSummary(),
+        ], 201);
+    }
+
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+
+        return response()->json([
+            'data' => $entity,
+            'summary' => $entity->toOperationalSummary(),
+            'constraints' => $entity->validateOperationalConstraints(),
+        ]);
+    }
+
+    public function update(UpdateAirportRequest $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+
+        $payload = $request->validated();
+        $payload['updated_by'] = $request->user()->id;
+        $updated = $this->service->update($entity, $payload);
+
+        return response()->json([
+            'message' => 'Airport updated successfully',
+            'data' => $updated->toOperationalSummary(),
+        ]);
+    }
+
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+
+        $this->service->delete($entity, $request->user()->id);
+
+        return response()->json(['message' => 'Airport deleted successfully']);
+    }
+
+    public function activate(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        $entity->updated_by = $request->user()->id;
+        $entity->activate();
+        return response()->json(['data' => $entity->toOperationalSummary()]);
+    }
+
+    public function deactivate(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        $reason = $request->input('reason');
+        $entity->updated_by = $request->user()->id;
+        $entity->deactivate($reason);
+        return response()->json(['data' => $entity->toOperationalSummary()]);
+    }
+
+    public function archive(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        $entity->updated_by = $request->user()->id;
+        $entity->archive($request->input('reason'));
+        return response()->json(['data' => $entity->toOperationalSummary()]);
+    }
+
+    public function bulk(BulkAirportRequest $request): JsonResponse
+    {
+        $airlineId = $request->attributes->get('airline_id');
+        $action = $request->input('action');
+        $ids = $request->input('ids', []);
+
+        $result = DB::transaction(function () use ($action, $ids, $airlineId, $request) {
+            return $this->service->bulkAction($action, $ids, $airlineId, $request->user()->id, $request->input('payload', []));
+        });
+
+        return response()->json(['message' => 'Bulk action completed', 'result' => $result]);
+    }
+
+    public function syncExternal(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        $entity->updated_by = $request->user()->id;
+        $synced = $entity->syncFromExternal($request->all());
+        Log::info('Airport external sync', ['id' => $id, 'user' => $request->user()->id]);
+        return response()->json(['data' => $synced->toOperationalSummary()]);
+    }
+
+    public function export(SearchAirportRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $filters['airline_id'] = $request->attributes->get('airline_id');
+        $rows = $this->service->export($filters);
+        return response()->json(['data' => $rows, 'count' => count($rows)]);
+    }
+
+    public function statistics(Request $request): JsonResponse
+    {
+        $airlineId = $request->attributes->get('airline_id');
+        return response()->json(['data' => $this->service->statistics($airlineId)]);
+    }
+
+    public function timeline(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        return response()->json(['data' => $this->service->timeline($entity)]);
+    }
+
+    public function cloneRecord(Request $request, int $id): JsonResponse
+    {
+        $entity = $this->service->findForAirline($id, $request->attributes->get('airline_id'));
+        if (!$entity) {
+            return response()->json(['message' => 'Airport not found'], 404);
+        }
+        $clone = $this->service->cloneRecord($entity, $request->user()->id, $request->input('overrides', []));
+        return response()->json(['data' => $clone->toOperationalSummary()], 201);
+    }
+}
