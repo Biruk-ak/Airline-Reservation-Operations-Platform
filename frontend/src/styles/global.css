@@ -1,0 +1,128 @@
+:root {
+  --arop-navy: #0B3D91;
+  --arop-sky: #1E6FD9;
+  --arop-steel: #2C3E50;
+  --arop-cloud: #E8EEF7;
+  --arop-mist: #F5F8FC;
+  --arop-accent: #C8102E;
+  --arop-success: #1B7F4E;
+  --arop-warning: #C47F17;
+  --arop-font-display: "Segoe UI", "Helvetica Neue", sans-serif;
+  --arop-font-body: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: var(--arop-font-body);
+  color: var(--arop-steel);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(30,111,217,0.18), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(11,61,145,0.12), transparent 55%),
+    linear-gradient(180deg, var(--arop-mist), #ffffff 40%);
+}
+
+a { color: var(--arop-sky); text-decoration: none; }
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.arop-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+.arop-sidebar {
+  background: linear-gradient(180deg, #072A66, var(--arop-navy));
+  color: #fff;
+  padding: 1.25rem 1rem;
+}
+.arop-brand {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+.arop-nav a {
+  display: block;
+  color: rgba(255,255,255,0.86);
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+}
+.arop-nav a:hover, .arop-nav a.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+.arop-main { padding: 1.5rem 2rem; }
+.arop-page-title {
+  font-size: 1.75rem;
+  color: var(--arop-navy);
+  margin: 0 0 0.35rem;
+}
+.arop-page-sub {
+  color: #5b6b7c;
+  margin: 0 0 1.5rem;
+}
+.arop-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.arop-input, .arop-select {
+  border: 1px solid #c9d4e3;
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  min-width: 180px;
+  background: #fff;
+}
+.arop-btn {
+  background: var(--arop-navy);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+}
+.arop-btn.secondary { background: #5b6b7c; }
+.arop-btn.danger { background: var(--arop-accent); }
+.arop-table-wrap {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid #d7e0ec;
+  border-radius: 10px;
+  overflow: auto;
+}
+table.arop-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.arop-table th, table.arop-table td {
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid #e6edf5;
+  font-size: 0.92rem;
+}
+table.arop-table th {
+  background: var(--arop-cloud);
+  color: var(--arop-navy);
+  position: sticky;
+  top: 0;
+}
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge.active { background: #d8f3e5; color: var(--arop-success); }
+.badge.inactive { background: #f0f2f5; color: #6a7684; }
+.badge.warning { background: #fff0d4; color: var(--arop-warning); }
+.badge.danger { background: #ffe0e5; color: var(--arop-accent); }
+
+@media (max-width: 900px) {
+  .arop-shell { grid-template-columns: 1fr; }
+  .arop-sidebar { position: sticky; top: 0; z-index: 10; }
+}
