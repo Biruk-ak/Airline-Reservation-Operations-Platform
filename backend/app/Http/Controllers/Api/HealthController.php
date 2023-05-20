@@ -16,6 +16,8 @@ class HealthController extends Controller
         return response()->json([
             'status' => ($db === 'ok' && $redis === 'ok') ? 'ok' : 'degraded',
             'app' => 'Airline Reservation & Operations Platform',
+            'version' => '1.0.0',
+            'modules_enabled' => 20,
             'checks' => compact('db', 'redis'),
             'time' => now()->toIso8601String(),
         ]);
