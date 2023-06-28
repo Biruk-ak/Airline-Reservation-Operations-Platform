@@ -252,7 +252,7 @@ export default function FlightSchedulingPage() {
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={10}>No flight scheduling records found.</td></tr>
+              <tr><td colSpan={10}>No flight schedules yet. Create your first schedule to start managing aircraft slots and departure banks.</td></tr>
             )}
             {rows.map((row) => (
               <tr key={row.id} style={{ background: selectedId === row.id ? '#eef5ff' : undefined }}>
