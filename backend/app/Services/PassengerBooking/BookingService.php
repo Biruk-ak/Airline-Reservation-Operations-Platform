@@ -43,6 +43,9 @@ class BookingService
         if (!empty($filters['priority_min'])) {
             $query->withPriorityAbove((int) $filters['priority_min'] - 1);
         }
+        if (!empty($filters['external_ref'])) {
+            $query->byExternalRef($filters['external_ref']);
+        }
         if (!empty($filters['q'])) {
             $term = $filters['q'];
             $query->where(function ($q) use ($term) {
