@@ -180,6 +180,8 @@ class AnalyticsMetricService
                 'by_region' => (clone $base)->select('region', DB::raw('count(*) as c'))
                     ->groupBy('region')->pluck('c', 'region'),
                 'avg_priority' => round((float) (clone $base)->avg('priority'), 2),
+                'otp_pct' => (float) ((clone $base)->avg('metadata->otp_pct') ?? 0),
+                'delay_avg' => (float) ((clone $base)->avg('metadata->delay_avg') ?? 0),
             ];
         });
     }
